@@ -1,4 +1,8 @@
-local function next_reference()
+local M = {}
+
+local function reference_jump(opts)
+  opts = opts or { forward = true }
+
   local params = vim.lsp.util.make_position_params()
   local context = { includeDeclaration = true }
   params = vim.tbl_extend('error', params, { context = context })
@@ -18,20 +22,40 @@ local function next_reference()
     local current_line = current_position[1] - 1
     local current_col = current_position[2]
 
-    local next_reference = vim.iter(references):find(function(ref)
-      local ref_line = ref.range.start.line
-      local ref_col = ref.range.start.character
+    local function find_reference()
+      if opts.forward then
+        return vim.iter(references):find(function(ref)
+          local ref_pos = ref.range.start
+          local ref_line = ref_pos.line
+          local ref_col = ref_pos.character
 
-      return ref_line > current_line or (ref_line == current_line and ref_col > current_col)
-    end)
+          return ref_line > current_line or (ref_line == current_line and ref_col > current_col)
+        end)
+      else
+        return vim.iter(references):rfind(function(ref)
+          local ref_pos = ref.range.start
+          local ref_line = ref_pos.line
+          local ref_col = ref_pos.character
 
-    -- If no next reference found, loop back to the first reference
+          return ref_line < current_line or (ref_line == current_line and ref_col < current_col)
+        end)
+      end
+    end
+
+    local next_reference = find_reference()
+
+    -- If no reference is found in the chosen direction, loop around
     if not next_reference then
-      next_reference = references[1]
+      next_reference = opts.forward and references[1] or references[#references]
     end
 
     if next_reference then
       local uri = next_reference.uri or next_reference.targetUri
+      if not uri then
+        vim.notify('Invalid URI in LSP response', vim.log.levels.ERROR)
+        return
+      end
+
       local bufnr = vim.uri_to_bufnr(uri)
 
       vim.fn.bufload(bufnr)
@@ -48,4 +72,9 @@ local function next_reference()
   end)
 end
 
-vim.keymap.set('n', ']r', next_reference, {})
+function M.setup(_)
+  vim.keymap.set('n', ']r', function() reference_jump({ forward = true }) end, {})
+  vim.keymap.set('n', '[r', function() reference_jump({ forward = false }) end, {})
+end
+
+return M
