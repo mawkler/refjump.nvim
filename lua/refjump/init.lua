@@ -1,6 +1,14 @@
 local M = {}
 
-local function reference_jump(opts)
+local options = {
+  keymaps = {
+    enable = true,
+    next = ']r',
+    prev = '[r',
+  },
+}
+
+function M.reference_jump(opts)
   opts = opts or { forward = true }
 
   local params = vim.lsp.util.make_position_params()
@@ -22,27 +30,16 @@ local function reference_jump(opts)
     local current_line = current_position[1] - 1
     local current_col = current_position[2]
 
-    local function find_reference()
-      if opts.forward then
-        return vim.iter(references):find(function(ref)
+    -- Find the next or previous reference
+    local next_reference = opts.forward and
+        vim.iter(references):find(function(ref)
           local ref_pos = ref.range.start
-          local ref_line = ref_pos.line
-          local ref_col = ref_pos.character
-
-          return ref_line > current_line or (ref_line == current_line and ref_col > current_col)
-        end)
-      else
-        return vim.iter(references):rfind(function(ref)
+          return ref_pos.line > current_line or (ref_pos.line == current_line and ref_pos.character > current_col)
+        end) or
+        vim.iter(references):rfind(function(ref)
           local ref_pos = ref.range.start
-          local ref_line = ref_pos.line
-          local ref_col = ref_pos.character
-
-          return ref_line < current_line or (ref_line == current_line and ref_col < current_col)
+          return ref_pos.line < current_line or (ref_pos.line == current_line and ref_pos.character < current_col)
         end)
-      end
-    end
-
-    local next_reference = find_reference()
 
     -- If no reference is found in the chosen direction, loop around
     if not next_reference then
@@ -72,9 +69,12 @@ local function reference_jump(opts)
   end)
 end
 
-function M.setup(_)
-  vim.keymap.set('n', ']r', function() reference_jump({ forward = true }) end, {})
-  vim.keymap.set('n', '[r', function() reference_jump({ forward = false }) end, {})
+function M.setup(opts)
+  options = vim.tbl_deep_extend('force', options, opts)
+
+  if options.keymaps.enable then
+    require('refjump.keymaps').create_keymaps(options)
+  end
 end
 
 return M
