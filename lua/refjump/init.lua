@@ -1,8 +1,5 @@
 local M = {}
 
----Used to keep track of if LSP reference highlights should be enabled
-local highlight_references = false
-
 ---@class RefjumpKeymapOptions
 ---@field enable? boolean
 ---@field next? string Keymap to jump to next LSP reference
@@ -89,7 +86,9 @@ end
 function M.reference_jump(opts)
   opts = opts or { forward = true }
 
-  vim.lsp.buf.document_highlight()
+  if options.highlights.enable then
+    require('refjump.highlight').enable_reference_highlights()
+  end
 
   local params = vim.lsp.util.make_position_params()
   local context = { includeDeclaration = true }
@@ -118,24 +117,10 @@ function M.reference_jump(opts)
 
     if next_reference then
       move_cursor_to(next_reference)
-      highlight_references = true
     else
       vim.notify('refjump.nvim: Could not find the next reference', vim.log.levels.WARN)
     end
   end)
-end
-
-local function clear_highlights_on_cursor_move()
-  vim.api.nvim_create_autocmd('CursorMoved', {
-    -- TODO: expose clear function to user
-    callback = function()
-      if not highlight_references then
-        vim.lsp.buf.clear_references()
-      else
-        highlight_references = false
-      end
-    end,
-  })
 end
 
 ---@param opts RefjumpOptions
@@ -147,7 +132,7 @@ function M.setup(opts)
   end
 
   if options.highlights.enable and options.highlights.auto_clear then
-    clear_highlights_on_cursor_move()
+    require('refjump.highlight').auto_clear_reference_highlights()
   end
 end
 
