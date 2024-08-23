@@ -9,7 +9,7 @@ local highlight_references = false
 ---@field prev? string Keymap to jump to previous LSP reference
 
 ---@class RefjumpHighlightOptions
----@field enable? boolean
+---@field enable? boolean Highlight the LSP references on jump
 ---@field auto_clear boolean Automatically clear highlights when cursor moves
 
 ---@class RefjumpIntegrationOptions
@@ -19,7 +19,7 @@ local highlight_references = false
 ---@field keymaps? RefjumpKeymapOptions
 ---@field highlights? RefjumpHighlightOptions
 ---@field integrations RefjumpIntegrationOptions
----@field verbose boolean Print warnings if no reference is found
+---@field verbose boolean Print message if no reference is found
 local options = {
   keymaps = {
     enable = true,
@@ -83,8 +83,8 @@ local function move_cursor_to(next_reference)
   vim.cmd('normal! zv')
 end
 
----Move cursor to next LSP reference if `forward` is `true`, otherwise move to
----the previous reference
+---Move cursor to next LSP reference in the current buffer if `forward` is
+---`true`, otherwise move to the previous reference
 ---@param opts { forward: boolean }
 function M.reference_jump(opts)
   opts = opts or { forward = true }
