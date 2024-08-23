@@ -1,5 +1,12 @@
 local M = {}
 
+---@class RefjumpKeymapOptions
+---@field enable? boolean
+---@field next? string
+---@field prev? string
+
+---@class RefjumpOptions
+---@field keymaps? RefjumpKeymapOptions
 local options = {
   keymaps = {
     enable = true,
@@ -8,6 +15,52 @@ local options = {
   },
 }
 
+---@param references table[]
+---@param forward boolean
+---@param current_position integer[]
+---@return table
+local function find_next_reference(references, forward, current_position)
+  local current_line = current_position[1] - 1
+  local current_col = current_position[2]
+
+  local next_reference
+  if forward then
+    next_reference = vim.iter(references):find(function(ref)
+      local ref_pos = ref.range.start
+      return ref_pos.line > current_line or (ref_pos.line == current_line and ref_pos.character > current_col)
+    end)
+  else
+    next_reference = vim.iter(references):rfind(function(ref)
+      local ref_pos = ref.range.start
+      return ref_pos.line < current_line or (ref_pos.line == current_line and ref_pos.character < current_col)
+    end)
+  end
+
+  return next_reference
+end
+
+---@param next_reference table
+local function move_cursor_to(next_reference)
+  local uri = next_reference.uri or next_reference.targetUri
+  if not uri then
+    vim.notify('Invalid URI in LSP response', vim.log.levels.ERROR)
+    return
+  end
+
+  local bufnr = vim.uri_to_bufnr(uri)
+
+  vim.fn.bufload(bufnr)
+  vim.api.nvim_set_current_buf(bufnr)
+  vim.api.nvim_win_set_cursor(0, {
+    next_reference.range.start.line + 1,
+    next_reference.range.start.character,
+  })
+
+  -- Open folds if the reference is inside a fold
+  vim.cmd('normal! zv')
+end
+
+---@param opts { forward: boolean }
 function M.reference_jump(opts)
   opts = opts or { forward = true }
 
@@ -27,48 +80,22 @@ function M.reference_jump(opts)
     end
 
     local current_position = vim.api.nvim_win_get_cursor(0)
-    local current_line = current_position[1] - 1
-    local current_col = current_position[2]
+    local next_reference = find_next_reference(references, opts.forward, current_position)
 
-    -- Find the next or previous reference
-    local next_reference = opts.forward and
-        vim.iter(references):find(function(ref)
-          local ref_pos = ref.range.start
-          return ref_pos.line > current_line or (ref_pos.line == current_line and ref_pos.character > current_col)
-        end) or
-        vim.iter(references):rfind(function(ref)
-          local ref_pos = ref.range.start
-          return ref_pos.line < current_line or (ref_pos.line == current_line and ref_pos.character < current_col)
-        end)
-
-    -- If no reference is found in the chosen direction, loop around
+    -- If no reference is found, loop around
     if not next_reference then
       next_reference = opts.forward and references[1] or references[#references]
     end
 
     if next_reference then
-      local uri = next_reference.uri or next_reference.targetUri
-      if not uri then
-        vim.notify('Invalid URI in LSP response', vim.log.levels.ERROR)
-        return
-      end
-
-      local bufnr = vim.uri_to_bufnr(uri)
-
-      vim.fn.bufload(bufnr)
-      vim.api.nvim_set_current_buf(bufnr)
-      vim.api.nvim_win_set_cursor(0, {
-        next_reference.range.start.line + 1,
-        next_reference.range.start.character,
-      })
-
-      vim.cmd('normal! zv') -- Open folds if the reference is inside a fold
+      move_cursor_to(next_reference)
     else
       vim.notify('Could not find the next reference', vim.log.levels.WARN)
     end
   end)
 end
 
+---@param opts RefjumpOptions
 function M.setup(opts)
   options = vim.tbl_deep_extend('force', options, opts)
 
