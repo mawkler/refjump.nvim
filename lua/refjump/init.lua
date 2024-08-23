@@ -2,16 +2,25 @@ local M = {}
 
 ---@class RefjumpKeymapOptions
 ---@field enable? boolean
----@field next? string
----@field prev? string
+---@field next? string Keymap to jump to next LSP reference
+---@field prev? string Keymap to jump to previous LSP reference
+
+---@class RefjumpIntegrationOptions
+---@field demicolon? { enable?: boolean } Make `]r`/`[r` repeatable with `;`/`,` using demicolon.nvim
 
 ---@class RefjumpOptions
 ---@field keymaps? RefjumpKeymapOptions
+---@field integrations RefjumpIntegrationOptions
 local options = {
   keymaps = {
     enable = true,
     next = ']r',
     prev = '[r',
+  },
+  integrations = {
+    demicolon = {
+      enable = true,
+    },
   },
 }
 
@@ -60,6 +69,8 @@ local function move_cursor_to(next_reference)
   vim.cmd('normal! zv')
 end
 
+---Move cursor to next LSP reference if `forward` is `true`, otherwise move to
+---the previous reference
 ---@param opts { forward: boolean }
 function M.reference_jump(opts)
   opts = opts or { forward = true }
