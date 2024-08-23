@@ -1,27 +1,41 @@
 local M = {}
 
+---Used to keep track of if LSP reference highlights should be enabled
+local highlight_references = false
+
 ---@class RefjumpKeymapOptions
 ---@field enable? boolean
 ---@field next? string Keymap to jump to next LSP reference
 ---@field prev? string Keymap to jump to previous LSP reference
+
+---@class RefjumpHighlightOptions
+---@field enable? boolean
+---@field auto_clear boolean Automatically clear highlights when cursor moves
 
 ---@class RefjumpIntegrationOptions
 ---@field demicolon? { enable?: boolean } Make `]r`/`[r` repeatable with `;`/`,` using demicolon.nvim
 
 ---@class RefjumpOptions
 ---@field keymaps? RefjumpKeymapOptions
+---@field highlights? RefjumpHighlightOptions
 ---@field integrations RefjumpIntegrationOptions
+---@field verbose boolean Print warnings if no reference is found
 local options = {
   keymaps = {
     enable = true,
     next = ']r',
     prev = '[r',
   },
+  highlights = {
+    enable = true,
+    auto_clear = true,
+  },
   integrations = {
     demicolon = {
       enable = true,
     },
   },
+  verbose = true,
 }
 
 ---@param references table[]
@@ -52,7 +66,7 @@ end
 local function move_cursor_to(next_reference)
   local uri = next_reference.uri or next_reference.targetUri
   if not uri then
-    vim.notify('Invalid URI in LSP response', vim.log.levels.ERROR)
+    vim.notify('refjump.nvim: Invalid URI in LSP response', vim.log.levels.ERROR)
     return
   end
 
@@ -75,18 +89,22 @@ end
 function M.reference_jump(opts)
   opts = opts or { forward = true }
 
+  vim.lsp.buf.document_highlight()
+
   local params = vim.lsp.util.make_position_params()
   local context = { includeDeclaration = true }
   params = vim.tbl_extend('error', params, { context = context })
 
   vim.lsp.buf_request(0, 'textDocument/references', params, function(err, references, _, _)
     if err then
-      vim.notify('LSP Error: ' .. err.message, vim.log.levels.ERROR)
+      vim.notify('refjump.nvim: LSP Error: ' .. err.message, vim.log.levels.ERROR)
       return
     end
 
     if not references or vim.tbl_isempty(references) then
-      vim.notify('No references found', vim.log.levels.INFO)
+      if options.verbose then
+        vim.notify('No references found', vim.log.levels.INFO)
+      end
       return
     end
 
@@ -100,10 +118,24 @@ function M.reference_jump(opts)
 
     if next_reference then
       move_cursor_to(next_reference)
+      highlight_references = true
     else
-      vim.notify('Could not find the next reference', vim.log.levels.WARN)
+      vim.notify('refjump.nvim: Could not find the next reference', vim.log.levels.WARN)
     end
   end)
+end
+
+local function clear_highlights_on_cursor_move()
+  vim.api.nvim_create_autocmd('CursorMoved', {
+    -- TODO: expose clear function to user
+    callback = function()
+      if not highlight_references then
+        vim.lsp.buf.clear_references()
+      else
+        highlight_references = false
+      end
+    end,
+  })
 end
 
 ---@param opts RefjumpOptions
@@ -112,6 +144,10 @@ function M.setup(opts)
 
   if options.keymaps.enable then
     require('refjump.keymaps').create_keymaps(options)
+  end
+
+  if options.highlights.enable and options.highlights.auto_clear then
+    clear_highlights_on_cursor_move()
   end
 end
 
