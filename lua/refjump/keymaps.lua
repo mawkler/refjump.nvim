@@ -2,14 +2,22 @@ local M = {}
 
 local function jump_map(opts)
   return function()
-    require('refjump').reference_jump(opts)
+    local current_position = vim.api.nvim_win_get_cursor(0)
+    require('refjump').reference_jump(opts, current_position)
   end
 end
 
 local function repeatable_jump_map(opts)
   local repeatably_do = require('demicolon.jump').repeatably_do
   return function()
-    repeatably_do(require('refjump').reference_jump, opts)
+    local references
+    repeatably_do(function(o)
+      -- TODO: create and expose function that calculates current_position
+      local current_position = vim.api.nvim_win_get_cursor(0)
+      require('refjump').reference_jump(o, current_position, references, function(refs)
+        references = refs
+      end)
+    end, opts)
   end
 end
 

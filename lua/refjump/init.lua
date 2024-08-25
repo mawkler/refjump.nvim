@@ -60,7 +60,7 @@ local function find_next_reference(references, forward, current_position)
 end
 
 ---@param next_reference table
-local function move_cursor_to(next_reference)
+local function jump_to(next_reference)
   local uri = next_reference.uri or next_reference.targetUri
   if not uri then
     vim.notify('refjump.nvim: Invalid URI in LSP response', vim.log.levels.ERROR)
@@ -80,45 +80,67 @@ local function move_cursor_to(next_reference)
   vim.cmd('normal! zv')
 end
 
+---@param next_reference integer[]
+---@param forward boolean
+---@param references any[]
+local function jump_to_next_reference(next_reference, forward, references)
+  -- If no reference is found, loop around
+  if not next_reference then
+    next_reference = forward and references[1] or references[#references]
+  end
+
+  if next_reference then
+    jump_to(next_reference)
+  else
+    vim.notify('refjump.nvim: Could not find the next reference', vim.log.levels.WARN)
+  end
+end
+
 ---Move cursor to next LSP reference in the current buffer if `forward` is
----`true`, otherwise move to the previous reference
+---`true`, otherwise move to the previous reference. If `references` is not
+---`nil`, `references` is used to determine next position. If `references` is
+---`nil` they will be requested from the LSP server and passed to
+---`with_references`
 ---@param opts { forward: boolean }
-function M.reference_jump(opts)
+---@param current_position integer[]
+---@param references? any[]
+---@param with_references? function(any[]) Called if `references` is `nil` with LSP references for item at `current_position`
+function M.reference_jump(opts, current_position, references, with_references)
   opts = opts or { forward = true }
 
   if options.highlights.enable then
     require('refjump.highlight').enable_reference_highlights()
   end
 
+  -- If references have already been computed (i.e. we're repeating the jump)
+  if references then
+    local next_reference = find_next_reference(references, opts.forward, current_position)
+    jump_to_next_reference(next_reference, opts.forward, references)
+    return
+  end
+
   local params = vim.lsp.util.make_position_params()
   local context = { includeDeclaration = true }
   params = vim.tbl_extend('error', params, { context = context })
 
-  vim.lsp.buf_request(0, 'textDocument/references', params, function(err, references, _, _)
+  vim.lsp.buf_request(0, 'textDocument/references', params, function(err, refs, _, _)
     if err then
       vim.notify('refjump.nvim: LSP Error: ' .. err.message, vim.log.levels.ERROR)
       return
     end
 
-    if not references or vim.tbl_isempty(references) then
+    if not refs or vim.tbl_isempty(refs) then
       if options.verbose then
         vim.notify('No references found', vim.log.levels.INFO)
       end
       return
     end
 
-    local current_position = vim.api.nvim_win_get_cursor(0)
-    local next_reference = find_next_reference(references, opts.forward, current_position)
+    local next_reference = find_next_reference(refs, opts.forward, current_position)
+    jump_to_next_reference(next_reference, opts.forward, refs)
 
-    -- If no reference is found, loop around
-    if not next_reference then
-      next_reference = opts.forward and references[1] or references[#references]
-    end
-
-    if next_reference then
-      move_cursor_to(next_reference)
-    else
-      vim.notify('refjump.nvim: Could not find the next reference', vim.log.levels.WARN)
+    if with_references then
+      with_references(refs)
     end
   end)
 end
