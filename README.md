@@ -1,6 +1,8 @@
 # Refjump
 
-Jump to next/previous LSP reference in the current buffer with `]r`/`[r`.
+Jump to next/previous LSP reference in the current buffer for the item under the cursor with `]r`/`[r`.
+
+If you have [demicolon.nvim](https://github.com/mawkler/demicolon.nvim) installed you can also repeat jumps with `;`/`,` . See the [Demicolon section](#demicolon) for more information.
 
 ## Installation
 
@@ -40,4 +42,8 @@ opts = {
 
 ## Integrations
 
-This plugin integrates with [demicolon.nvim](https://github.com/mawkler/demicolon.nvim). Demicolon lets you repeat `]r`/`[r` jumps with `;`/`,`. This integration is automatically set up if demicolon.nvim is detected and the option `integrations.demicolon.enable` is `true`.
+### Demicolon
+
+This plugin integrates with [demicolon.nvim](https://github.com/mawkler/demicolon.nvim). Demicolon lets you repeat `]r`/`[r` jumps with `;`/`,`. Refjump will cache the list of LSP references which gives you super responsive jump repetitions.
+
+This integration is automatically set up if demicolon.nvim is detected and the option `integrations.demicolon.enable` is `true`.
