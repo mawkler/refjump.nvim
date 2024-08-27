@@ -16,6 +16,13 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 }
 ```
 
+## Usage
+
+- Press `]r` or `[r` to jump to the next/previous reference for the item under the cursor.
+- Press `;`/`,` to keep jumping forward/backward between those references (requires [demicolon.nvim](https://github.com/mawkler/demicolon.nvim))
+
+You can also prefix any jump with a count. For example, you can do `3]r` to jump to the third next reference. This also works for `;`/`,`.
+
 ## Configuration
 
 The following is the default configuration:
