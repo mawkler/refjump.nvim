@@ -73,16 +73,17 @@ local function jump_to_next_reference_and_highlight(references, forward, current
   end
 end
 
----Move cursor to next LSP reference in the current buffer if `forward` is
----`true`, otherwise move to the previous reference. If `references` is not
----`nil`, `references` is used to determine next position. If `references` is
----`nil` they will be requested from the LSP server and passed to
----`with_references`
----@param opts { forward: boolean }
+---Move cursor from `current_position` to the next LSP reference in the current
+---buffer if `forward` is `true`, otherwise move to the previous reference.
+---
+---If `references` is not `nil`, `references` is used to determine next
+---position. If `references` is `nil` they will be requested from the LSP
+---server and passed to `with_references`.
 ---@param current_position integer[]
+---@param opts { forward: boolean }
 ---@param references? table[]
 ---@param with_references? function(any[]) Called if `references` is `nil` with LSP references for item at `current_position`
-function M.reference_jump(opts, current_position, references, with_references)
+function M.reference_jump_from(current_position, opts, references, with_references)
   opts = opts or { forward = true }
 
   -- If references have already been computed (i.e. we're repeating the jump)
@@ -114,6 +115,20 @@ function M.reference_jump(opts, current_position, references, with_references)
       with_references(refs)
     end
   end)
+end
+
+---Move cursor to next LSP reference in the current buffer if `forward` is
+---`true`, otherwise move to the previous reference.
+---
+---If `references` is not `nil`, `references` is used to determine next
+---position. If `references` is `nil` they will be requested from the LSP
+---server and passed to `with_references`.
+---@param opts { forward: boolean }
+---@param references? table[]
+---@param with_references? function(any[]) Called if `references` is `nil` with LSP references for item at `current_position`
+function M.reference_jump(opts, references, with_references)
+  local current_position = vim.api.nvim_win_get_cursor(0)
+  M.reference_jump_from(current_position, opts, references, with_references)
 end
 
 return M
