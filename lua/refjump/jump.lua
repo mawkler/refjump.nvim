@@ -1,27 +1,50 @@
 local M = {}
 
----@param references table[]
+---@alias RefjumpReferencePosition { character: integer, line: integer }
+---@alias RefjumpReferenceRange { start: RefjumpReferencePosition, end: RefjumpReferencePosition }
+---@alias RefjumpReference { range: RefjumpReferenceRange, uri: string }
+
+---@param ref_pos RefjumpReferencePosition
+---@param current_line integer
+---@param current_col integer
+---@return boolean
+local function reference_is_after_current_position(ref_pos, current_line, current_col)
+  return ref_pos.line > current_line
+      or (ref_pos.line == current_line and ref_pos.character > current_col)
+end
+
+---@param ref_pos RefjumpReferencePosition
+---@param current_line integer
+---@param current_col integer
+---@return boolean
+local function reference_is_before_current_position(ref_pos, current_line, current_col)
+  return ref_pos.line < current_line
+      or (ref_pos.line == current_line and ref_pos.character < current_col)
+end
+
+---Find n:th next reference in `references` from `current_position` where n is
+---`count`. Search forward if `forward` is `true`, otherwise search backwards.
+---@param references RefjumpReference[]
 ---@param forward boolean
+---@param count integer
 ---@param current_position integer[]
 ---@return table
-local function find_next_reference(references, forward, current_position)
+local function find_next_reference(references, forward, count, current_position)
   local current_line = current_position[1] - 1
   local current_col = current_position[2]
 
-  local next_reference
-  if forward then
-    next_reference = vim.iter(references):find(function(ref)
-      local ref_pos = ref.range.start
-      return ref_pos.line > current_line or (ref_pos.line == current_line and ref_pos.character > current_col)
-    end)
-  else
-    next_reference = vim.iter(references):rfind(function(ref)
-      local ref_pos = ref.range.start
-      return ref_pos.line < current_line or (ref_pos.line == current_line and ref_pos.character < current_col)
-    end)
-  end
+  local iter = forward
+      and vim.iter(references)
+      or vim.iter(references):rev()
 
-  return next_reference
+  return iter:filter(function(ref)
+    local ref_pos = ref.range.start
+    if forward then
+      return reference_is_after_current_position(ref_pos, current_line, current_col)
+    else
+      return reference_is_before_current_position(ref_pos, current_line, current_col)
+    end
+  end):nth(count)
 end
 
 ---@param next_reference table
@@ -47,7 +70,7 @@ end
 
 ---@param next_reference integer[]
 ---@param forward boolean
----@param references any[]
+---@param references RefjumpReference[]
 local function jump_to_next_reference(next_reference, forward, references)
   -- If no reference is found, loop around
   if not next_reference then
@@ -61,11 +84,12 @@ local function jump_to_next_reference(next_reference, forward, references)
   end
 end
 
----@param references table[]
+---@param references RefjumpReference[]
 ---@param forward boolean
+---@param count integer
 ---@param current_position integer[]
-local function jump_to_next_reference_and_highlight(references, forward, current_position)
-  local next_reference = find_next_reference(references, forward, current_position)
+local function jump_to_next_reference_and_highlight(references, forward, count, current_position)
+  local next_reference = find_next_reference(references, forward, count, current_position)
   jump_to_next_reference(next_reference, forward, references)
 
   if require('refjump').get_options().highlights.enable then
@@ -81,14 +105,15 @@ end
 ---server and passed to `with_references`.
 ---@param current_position integer[]
 ---@param opts { forward: boolean }
----@param references? table[]
----@param with_references? function(any[]) Called if `references` is `nil` with LSP references for item at `current_position`
-function M.reference_jump_from(current_position, opts, references, with_references)
+---@param count integer
+---@param references? RefjumpReference[]
+---@param with_references? function(RefjumpReference[]) Called if `references` is `nil` with LSP references for item at `current_position`
+function M.reference_jump_from(current_position, opts, count, references, with_references)
   opts = opts or { forward = true }
 
   -- If references have already been computed (i.e. we're repeating the jump)
   if references then
-    jump_to_next_reference_and_highlight(references, opts.forward, current_position)
+    jump_to_next_reference_and_highlight(references, opts.forward, count, current_position)
     return
   end
 
@@ -109,7 +134,7 @@ function M.reference_jump_from(current_position, opts, references, with_referenc
       return
     end
 
-    jump_to_next_reference_and_highlight(refs, opts.forward, current_position)
+    jump_to_next_reference_and_highlight(refs, opts.forward, count, current_position)
 
     if with_references then
       with_references(refs)
@@ -124,11 +149,12 @@ end
 ---position. If `references` is `nil` they will be requested from the LSP
 ---server and passed to `with_references`.
 ---@param opts { forward: boolean }
----@param references? table[]
----@param with_references? function(any[]) Called if `references` is `nil` with LSP references for item at `current_position`
+---@param references? RefjumpReference[]
+---@param with_references? function(RefjumpReference[]) Called if `references` is `nil` with LSP references for item at `current_position`
 function M.reference_jump(opts, references, with_references)
   local current_position = vim.api.nvim_win_get_cursor(0)
-  M.reference_jump_from(current_position, opts, references, with_references)
+  local count = vim.v.count1
+  M.reference_jump_from(current_position, opts, count, references, with_references)
 end
 
 return M
