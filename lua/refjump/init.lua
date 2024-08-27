@@ -96,6 +96,18 @@ local function jump_to_next_reference(next_reference, forward, references)
   end
 end
 
+---@param references table[]
+---@param forward boolean
+---@param current_position integer[]
+local function jump_to_next_reference_and_highlight(references, forward, current_position)
+  local next_reference = find_next_reference(references, forward, current_position)
+  jump_to_next_reference(next_reference, forward, references)
+
+  if options.highlights.enable then
+    require('refjump.highlight').enable_reference_highlights(references, 0)
+  end
+end
+
 ---Move cursor to next LSP reference in the current buffer if `forward` is
 ---`true`, otherwise move to the previous reference. If `references` is not
 ---`nil`, `references` is used to determine next position. If `references` is
@@ -103,19 +115,14 @@ end
 ---`with_references`
 ---@param opts { forward: boolean }
 ---@param current_position integer[]
----@param references? any[]
+---@param references? table[]
 ---@param with_references? function(any[]) Called if `references` is `nil` with LSP references for item at `current_position`
 function M.reference_jump(opts, current_position, references, with_references)
   opts = opts or { forward = true }
 
-  if options.highlights.enable then
-    require('refjump.highlight').enable_reference_highlights()
-  end
-
   -- If references have already been computed (i.e. we're repeating the jump)
   if references then
-    local next_reference = find_next_reference(references, opts.forward, current_position)
-    jump_to_next_reference(next_reference, opts.forward, references)
+    jump_to_next_reference_and_highlight(references, opts.forward, current_position)
     return
   end
 
@@ -136,8 +143,7 @@ function M.reference_jump(opts, current_position, references, with_references)
       return
     end
 
-    local next_reference = find_next_reference(refs, opts.forward, current_position)
-    jump_to_next_reference(next_reference, opts.forward, refs)
+    jump_to_next_reference_and_highlight(refs, opts.forward, current_position)
 
     if with_references then
       with_references(refs)

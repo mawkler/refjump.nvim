@@ -2,7 +2,7 @@
 
 Jump to next/previous LSP reference in the current buffer for the item under the cursor with `]r`/`[r`.
 
-If you have [demicolon.nvim](https://github.com/mawkler/demicolon.nvim) installed you can also repeat jumps with `;`/`,` . See the [Demicolon section](#demicolon) for more information.
+If you have [demicolon.nvim](https://github.com/mawkler/demicolon.nvim) installed you can also repeat jumps with `;`/`,`. See the [Demicolon section](#demicolon) for more information.
 
 ## Installation
 
