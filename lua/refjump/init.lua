@@ -159,8 +159,12 @@ function M.setup(opts)
     require('refjump.keymaps').create_keymaps(options)
   end
 
-  if options.highlights.enable and options.highlights.auto_clear then
-    require('refjump.highlight').auto_clear_reference_highlights()
+  if options.highlights.enable then
+    require('refjump.highlight').create_fallback_hl_group('LspReferenceText')
+
+    if options.highlights.auto_clear then
+      require('refjump.highlight').auto_clear_reference_highlights()
+    end
   end
 end
 

@@ -5,6 +5,16 @@ local highlight_references = false
 
 local highlight_namespace = vim.api.nvim_create_namespace('RefjumpReferenceHighlights')
 
+local reference_hl_name = 'RefjumpReference'
+
+function M.create_fallback_hl_group(fallback_hl)
+  local hl = vim.api.nvim_get_hl(0, { name = reference_hl_name })
+
+  if vim.tbl_isempty(hl) then
+    vim.api.nvim_set_hl(0, reference_hl_name, { link = fallback_hl })
+  end
+end
+
 function M.enable_reference_highlights(references, bufnr)
   for _, ref in ipairs(references) do
     local line = ref.range.start.line
@@ -14,7 +24,7 @@ function M.enable_reference_highlights(references, bufnr)
     vim.api.nvim_buf_add_highlight(
       bufnr,
       highlight_namespace,
-      'LspReferenceText',
+      reference_hl_name,
       line,
       start_col,
       end_col

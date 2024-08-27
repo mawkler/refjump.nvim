@@ -40,6 +40,10 @@ opts = {
 }
 ```
 
+### Highlights
+
+Refjump highlights the references by default. It uses the highlight group `RefjumpReferences`. To change the highlight, see `:help nvim_set_hl()`.
+
 ## Integrations
 
 ### Demicolon
