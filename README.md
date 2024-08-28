@@ -4,6 +4,8 @@ Jump to next/previous LSP reference in the current buffer for the item under the
 
 If you have [demicolon.nvim](https://github.com/mawkler/demicolon.nvim) installed you can also repeat jumps with `;`/`,`. See the [Demicolon section](#demicolon) for more information.
 
+https://github.com/user-attachments/assets/7109c1bc-1664-46eb-b16a-fa65c4f05f74
+
 ## Installation
 
 With [lazy.nvim](https://github.com/folke/lazy.nvim):
