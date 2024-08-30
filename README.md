@@ -57,6 +57,6 @@ Refjump highlights the references by default. It uses the highlight group `Refju
 
 ### Demicolon
 
-This plugin integrates with [demicolon.nvim](https://github.com/mawkler/demicolon.nvim). Demicolon lets you repeat `]r`/`[r` jumps with `;`/`,`. Refjump will cache the list of LSP references which gives you super responsive jump repetitions.
+This plugin integrates with [demicolon.nvim](https://github.com/mawkler/demicolon.nvim). Demicolon lets you repeat `]r`/`[r` jumps with `;`/`,` (you can also still repeat `t`/`f`/`T`/`F` like you would expect). Refjump will cache the list of LSP references which gives you super responsive jump repetitions.
 
 This integration is automatically set up if demicolon.nvim is detected and the option `integrations.demicolon.enable` is `true`.
