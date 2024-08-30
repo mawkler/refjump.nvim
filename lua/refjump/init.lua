@@ -40,7 +40,7 @@ function M.get_options()
   return options
 end
 
----@param opts RefjumpOptions
+---@param opts? RefjumpOptions
 function M.setup(opts)
   options = vim.tbl_deep_extend('force', options, opts or {})
 
