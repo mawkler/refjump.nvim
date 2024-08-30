@@ -42,7 +42,7 @@ end
 
 ---@param opts RefjumpOptions
 function M.setup(opts)
-  options = vim.tbl_deep_extend('force', options, opts)
+  options = vim.tbl_deep_extend('force', options, opts or {})
 
   if options.keymaps.enable then
     require('refjump.keymaps').create_keymaps(options)
