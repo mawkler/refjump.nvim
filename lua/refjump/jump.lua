@@ -130,6 +130,10 @@ function M.reference_jump_from(current_position, opts, count, references, with_r
       return
     end
 
+    table.sort(refs, function(a, b)
+      return a.range.start.line < b.range.start.line
+    end)
+
     jump_to_next_reference_and_highlight(refs, opts.forward, count, current_position)
 
     if with_references then
