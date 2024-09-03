@@ -15,8 +15,8 @@ local M = {}
 ---@class RefjumpOptions
 ---@field keymaps? RefjumpKeymapOptions
 ---@field highlights? RefjumpHighlightOptions
----@field integrations RefjumpIntegrationOptions
----@field verbose boolean Print message if no reference is found
+---@field integrations? RefjumpIntegrationOptions
+---@field verbose? boolean Print message if no reference is found
 local options = {
   keymaps = {
     enable = true,

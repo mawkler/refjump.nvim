@@ -28,7 +28,7 @@ end
 ---@param forward boolean
 ---@param count integer
 ---@param current_position integer[]
----@return table
+---@return RefjumpReference
 local function find_next_reference(references, forward, count, current_position)
   local current_line = current_position[1] - 1
   local current_col = current_position[2]
@@ -47,28 +47,22 @@ local function find_next_reference(references, forward, count, current_position)
   end):nth(count)
 end
 
----@param next_reference table
+---@param next_reference RefjumpReference
 local function jump_to(next_reference)
-  local uri = next_reference.uri or next_reference.targetUri
-  if not uri then
-    vim.notify('refjump.nvim: Invalid URI in LSP response', vim.log.levels.ERROR)
-    return
-  end
+  local bufnr = vim.api.nvim_get_current_buf()
+  local uri = vim.uri_from_bufnr(bufnr)
+  local next_location = { uri = uri, range = next_reference.range }
+  -- NOTE: encoding is hard-coded here. It's apparently usually utf-16. But
+  -- perhaps it should be calculated dynamically?
+  local encoding = 'utf-16'
 
-  local bufnr = vim.uri_to_bufnr(uri)
-
-  vim.fn.bufload(bufnr)
-  vim.api.nvim_set_current_buf(bufnr)
-  vim.api.nvim_win_set_cursor(0, {
-    next_reference.range.start.line + 1,
-    next_reference.range.start.character,
-  })
+  vim.lsp.util.jump_to_location(next_location, encoding)
 
   -- Open folds if the reference is inside a fold
   vim.cmd('normal! zv')
 end
 
----@param next_reference integer[]
+---@param next_reference RefjumpReference
 ---@param forward boolean
 ---@param references RefjumpReference[]
 local function jump_to_next_reference(next_reference, forward, references)
@@ -121,7 +115,11 @@ function M.reference_jump_from(current_position, opts, count, references, with_r
   local context = { includeDeclaration = true }
   params = vim.tbl_extend('error', params, { context = context })
 
-  vim.lsp.buf_request(0, 'textDocument/references', params, function(err, refs, _, _)
+  -- We're callling `textDocument/documentHighlight` here instead of
+  -- `textDocument/references` for performance reasons. The latter searches the
+  -- entire workspace, and `textDocument/documentHighlight` only searches the
+  -- current buffer, which is what we want.
+  vim.lsp.buf_request(0, 'textDocument/documentHighlight', params, function(err, refs, _, _)
     if err then
       vim.notify('refjump.nvim: LSP Error: ' .. err.message, vim.log.levels.ERROR)
       return
