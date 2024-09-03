@@ -1,0 +1,23 @@
+name: Refjump Workflow
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/refjump.yml
+      - README.md
+permissions:
+  contents: write
+jobs:
+  docs:
+    name: Pandoc to Vimdoc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: panvimdoc
+        uses: kdheepak/panvimdoc@main
+        with:
+          vimdoc: refjump
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "docs: auto generate vimdoc"
+          branch: ${{ github.head_ref }}
