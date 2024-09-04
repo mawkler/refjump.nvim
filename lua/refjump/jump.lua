@@ -112,12 +112,10 @@ function M.reference_jump_from(current_position, opts, count, references, with_r
   end
 
   local params = vim.lsp.util.make_position_params()
-  local context = { includeDeclaration = true }
-  params = vim.tbl_extend('error', params, { context = context })
 
-  -- We're callling `textDocument/documentHighlight` here instead of
+  -- We call `textDocument/documentHighlight` here instead of
   -- `textDocument/references` for performance reasons. The latter searches the
-  -- entire workspace, and `textDocument/documentHighlight` only searches the
+  -- entire workspace, but `textDocument/documentHighlight` only searches the
   -- current buffer, which is what we want.
   vim.lsp.buf_request(0, 'textDocument/documentHighlight', params, function(err, refs, _, _)
     if err then
