@@ -15,7 +15,14 @@ function M.create_fallback_hl_group(fallback_hl)
   end
 end
 
+---@deprecated Use `enable()` instead
 function M.enable_reference_highlights(references, bufnr)
+  local message = "refjump.nvim: `enable_reference_highlights()` has been renamed to `enable()`"
+  vim.notify(message, vim.log.levels.WARN)
+  M.enable(references, bufnr)
+end
+
+function M.enable(references, bufnr)
   for _, ref in ipairs(references) do
     local line = ref.range.start.line
     local start_col = ref.range.start.character
@@ -34,7 +41,14 @@ function M.enable_reference_highlights(references, bufnr)
   highlight_references = true
 end
 
+---@deprecated Use `disable()` instead
 function M.disable_reference_highlights()
+  local message = "refjump.nvim: `disable_reference_highlights()` has been renamed to `disable()`"
+  vim.notify(message, vim.log.levels.WARN)
+  M.disable()
+end
+
+function M.disable()
   if not highlight_references then
     vim.api.nvim_buf_clear_namespace(0, highlight_namespace, 0, -1)
   else
@@ -44,7 +58,7 @@ end
 
 function M.auto_clear_reference_highlights()
   vim.api.nvim_create_autocmd({ 'CursorMoved', 'ModeChanged', 'BufLeave' }, {
-    callback = M.disable_reference_highlights,
+    callback = M.disable,
   })
 end
 

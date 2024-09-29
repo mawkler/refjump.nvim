@@ -87,7 +87,7 @@ local function jump_to_next_reference_and_highlight(references, forward, count, 
   jump_to_next_reference(next_reference, forward, references)
 
   if require('refjump').get_options().highlights.enable then
-    require('refjump.highlight').enable_reference_highlights(references, 0)
+    require('refjump.highlight').enable(references, 0)
   end
 end
 
