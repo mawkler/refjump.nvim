@@ -27,8 +27,8 @@ function M.create_keymaps(opts)
       and repeatable_jump_map
       or jump_map
 
-  vim.keymap.set(nxo, opts.keymaps.next, jump({ forward = true }), {})
-  vim.keymap.set(nxo, opts.keymaps.prev, jump({ forward = false }), {})
+  vim.keymap.set(nxo, opts.keymaps.next, jump({ forward = true }), { desc = 'Referece jump forward' })
+  vim.keymap.set(nxo, opts.keymaps.prev, jump({ forward = false }), { desc = 'Referece jump backward' })
 end
 
 return M
