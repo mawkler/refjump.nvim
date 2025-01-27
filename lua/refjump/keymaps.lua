@@ -27,8 +27,24 @@ function M.create_keymaps(opts)
       and repeatable_jump_map
       or jump_map
 
-  vim.keymap.set(nxo, opts.keymaps.next, jump({ forward = true }), { desc = 'Next reference' })
-  vim.keymap.set(nxo, opts.keymaps.prev, jump({ forward = false }), { desc = 'Previous reference' })
+  -- Create keymaps only for buffers with lsp that supports documentHighlight
+  vim.api.nvim_create_autocmd("LspAttach", {
+    group = vim.api.nvim_create_augroup('refjump_lsp_attach', {}),
+    ---@param event { buf: number, data: { client_id: number } }
+    callback = function(event)
+      local client_id = event.data.client_id
+      local client = vim.lsp.get_client_by_id(client_id)
+
+      if client and client.supports_method('textDocument/documentHighlight', { bufnr = event.buf }) then
+        vim.keymap.set(nxo, opts.keymaps.next, jump({ forward = true }),
+          { desc = 'Next reference', buffer = event.buf })
+
+        vim.keymap.set(nxo, opts.keymaps.prev, jump({ forward = false }),
+          { desc = 'Previous reference', buffer = event.buf })
+        return
+      end
+    end
+  })
 end
 
 return M
