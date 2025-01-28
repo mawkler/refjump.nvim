@@ -45,7 +45,7 @@ function M.setup(opts)
   options = vim.tbl_deep_extend('force', options, opts or {})
 
   if options.keymaps.enable then
-    require('refjump.keymaps').create_keymaps(options)
+    require('refjump.keymaps').create_keymaps_autocmd(options)
   end
 
   if options.highlights.enable then

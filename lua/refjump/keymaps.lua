@@ -19,31 +19,37 @@ local function repeatable_jump_map(opts)
 end
 
 ---@param opts RefjumpOptions
-function M.create_keymaps(opts)
-  local nxo = { 'n', 'x', 'o' }
-  local demicolon_exists, _ = pcall(require, 'demicolon.jump')
-
-  local jump = (opts.integrations.demicolon.enable and demicolon_exists)
-      and repeatable_jump_map
-      or jump_map
-
-  -- Create keymaps only for buffers with lsp that supports documentHighlight
-  vim.api.nvim_create_autocmd("LspAttach", {
+function M.create_keymaps_autocmd(opts)
+  -- Create keymaps only for buffers with LSP that supports documentHighlight
+  vim.api.nvim_create_autocmd('LspAttach', {
     group = vim.api.nvim_create_augroup('refjump_lsp_attach', {}),
     ---@param event { buf: number, data: { client_id: number } }
     callback = function(event)
-      local client_id = event.data.client_id
-      local client = vim.lsp.get_client_by_id(client_id)
-
-      if client and client.supports_method('textDocument/documentHighlight', { bufnr = event.buf }) then
-        vim.keymap.set(nxo, opts.keymaps.next, jump({ forward = true }),
-          { desc = 'Next reference', buffer = event.buf })
-
-        vim.keymap.set(nxo, opts.keymaps.prev, jump({ forward = false }),
-          { desc = 'Previous reference', buffer = event.buf })
+      local client = vim.lsp.get_client_by_id(event.data.client_id)
+      local supports_document_highlight = client and client.supports_method(
+        'textDocument/documentHighlight',
+        { bufnr = event.buf }
+      )
+      if not supports_document_highlight then
         return
       end
-    end
+
+      local nxo = { 'n', 'x', 'o' }
+      local demicolon_exists, _ = pcall(require, 'demicolon.jump')
+      local jump = (opts.integrations.demicolon.enable and demicolon_exists)
+          and repeatable_jump_map
+          or jump_map
+
+      vim.keymap.set(nxo, opts.keymaps.next, jump({ forward = true }), {
+        desc = 'Next reference',
+        buffer = event.buf,
+      })
+
+      vim.keymap.set(nxo, opts.keymaps.prev, jump({ forward = false }), {
+        desc = 'Previous reference',
+        buffer = event.buf,
+      })
+    end,
   })
 end
 
