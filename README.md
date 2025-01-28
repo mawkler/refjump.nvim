@@ -13,7 +13,7 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 {
   'mawkler/refjump.nvim',
-  -- keys = { ']r', '[r' }, -- Uncomment to lazy load
+  event = 'LspAttach', -- Uncomment to lazy load
   opts = {}
 }
 ```
