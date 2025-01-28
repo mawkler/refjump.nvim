@@ -156,16 +156,6 @@ function M.reference_jump(opts, references, with_references)
     method = 'textDocument/documentHighlight',
   })
 
-  if #compatible_lsp_clients <= 0 then
-    if require('refjump').get_options().verbose then
-      local message = 'refjump.nvim: no LSP client with ' ..
-          '`textDocument/documentHighlight` support found'
-      require('refjump.utils').notify(message, vim.log.levels.WARN)
-    end
-
-    return
-  end
-
   local current_position = vim.api.nvim_win_get_cursor(0)
   local count = vim.v.count1
   M.reference_jump_from(current_position, opts, count, references, with_references)
