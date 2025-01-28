@@ -1,4 +1,4 @@
-*refjump.txt*           For NVIM v0.8.0           Last change: 2025 January 27
+*refjump.txt*           For NVIM v0.8.0           Last change: 2025 January 28
 
 ==============================================================================
 Table of Contents                                  *refjump-table-of-contents*
@@ -30,7 +30,7 @@ With lazy.nvim <https://github.com/folke/lazy.nvim>:
 >lua
     {
       'mawkler/refjump.nvim',
-      -- keys = { ']r', '[r' }, -- Uncomment to lazy load
+      event = 'LspAttach', -- Uncomment to lazy load
       opts = {}
     }
 <
