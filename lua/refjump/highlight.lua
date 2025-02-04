@@ -28,13 +28,13 @@ function M.enable(references, bufnr)
     local start_col = ref.range.start.character
     local end_col = ref.range['end'].character
 
-    vim.api.nvim_buf_add_highlight(
+    vim.hl.range(
       bufnr,
       highlight_namespace,
       reference_hl_name,
-      line,
-      start_col,
-      end_col
+      { line, start_col },
+      { line, end_col },
+      { inclusive = false }
     )
   end
 
