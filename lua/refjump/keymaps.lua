@@ -26,9 +26,9 @@ function M.create_keymaps_autocmd(opts)
     ---@param event { buf: number, data: { client_id: number } }
     callback = function(event)
       local client = vim.lsp.get_client_by_id(event.data.client_id)
-      local supports_document_highlight = client and client.supports_method(
+      local supports_document_highlight = client and client:supports_method(
         'textDocument/documentHighlight',
-        { bufnr = event.buf }
+        event.buf
       )
       if not supports_document_highlight then
         return
