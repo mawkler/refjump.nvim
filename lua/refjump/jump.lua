@@ -1,5 +1,9 @@
 local M = {}
 
+-- NOTE: encoding is hard-coded here. It's apparently usually utf-16. But
+-- perhaps it should be calculated dynamically?
+local POSITION_ENCODING = 'utf-16'
+
 ---@alias RefjumpReferencePosition { character: integer, line: integer }
 ---@alias RefjumpReferenceRange { start: RefjumpReferencePosition, end: RefjumpReferencePosition }
 ---@alias RefjumpReference { range: RefjumpReferenceRange, uri: string }
@@ -52,11 +56,8 @@ local function jump_to(next_reference)
   local bufnr = vim.api.nvim_get_current_buf()
   local uri = vim.uri_from_bufnr(bufnr)
   local next_location = { uri = uri, range = next_reference.range }
-  -- NOTE: encoding is hard-coded here. It's apparently usually utf-16. But
-  -- perhaps it should be calculated dynamically?
-  local encoding = 'utf-16'
 
-  vim.lsp.util.jump_to_location(next_location, encoding)
+  vim.lsp.util.show_document(next_location, POSITION_ENCODING)
 
   -- Open folds if the reference is inside a fold
   vim.cmd('normal! zv')
@@ -111,13 +112,13 @@ function M.reference_jump_from(current_position, opts, count, references, with_r
     return
   end
 
-  local params = vim.lsp.util.make_position_params()
-
-  -- We call `textDocument/documentHighlight` here instead of
+  -- NOTE: We call `textDocument/documentHighlight` here instead of
   -- `textDocument/references` for performance reasons. The latter searches the
   -- entire workspace, but `textDocument/documentHighlight` only searches the
   -- current buffer, which is what we want.
-  vim.lsp.buf_request(0, 'textDocument/documentHighlight', params, function(err, refs, _, _)
+  local document_highlight = 'textDocument/documentHighlight'
+  local params = vim.lsp.util.make_position_params(0, POSITION_ENCODING)
+  vim.lsp.buf_request(0, document_highlight, params, function(err, refs, _, _)
     if err then
       vim.notify('refjump.nvim: LSP Error: ' .. err.message, vim.log.levels.ERROR)
       return
@@ -152,10 +153,6 @@ end
 ---@param references? RefjumpReference[]
 ---@param with_references? function(RefjumpReference[]) Called if `references` is `nil` with LSP references for item at `current_position`
 function M.reference_jump(opts, references, with_references)
-  local compatible_lsp_clients = vim.lsp.get_clients({
-    method = 'textDocument/documentHighlight',
-  })
-
   local current_position = vim.api.nvim_win_get_cursor(0)
   local count = vim.v.count1
   M.reference_jump_from(current_position, opts, count, references, with_references)

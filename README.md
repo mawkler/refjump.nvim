@@ -8,6 +8,8 @@ https://github.com/user-attachments/assets/7109c1bc-1664-46eb-b16a-fa65c4f05f74
 
 ## Installation
 
+Refjump targets Neovim v0.11+. If you're on an older version, pin the commit [3459d17](https://github.com/mawkler/refjump.nvim/commit/3459d17ad750d49458fec5b315e3181c525c6b27) with your plugin manager.
+
 With [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ```lua
