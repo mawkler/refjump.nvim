@@ -17,7 +17,7 @@ end
 
 ---@deprecated Use `enable()` instead
 function M.enable_reference_highlights(references, bufnr)
-  local message = "refjump.nvim: `enable_reference_highlights()` has been renamed to `enable()`"
+  local message = 'refjump.nvim: `enable_reference_highlights()` has been renamed to `enable()`'
   vim.notify(message, vim.log.levels.WARN)
   M.enable(references, bufnr)
 end
@@ -43,7 +43,7 @@ end
 
 ---@deprecated Use `disable()` instead
 function M.disable_reference_highlights()
-  local message = "refjump.nvim: `disable_reference_highlights()` has been renamed to `disable()`"
+  local message = 'refjump.nvim: `disable_reference_highlights()` has been renamed to `disable()`'
   vim.notify(message, vim.log.levels.WARN)
   M.disable()
 end
