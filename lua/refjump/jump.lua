@@ -63,6 +63,20 @@ local function jump_to(next_reference)
   vim.cmd('normal! zv')
 end
 
+---Find the index of a reference in the references list
+---@param reference RefjumpReference
+---@param references RefjumpReference[]
+---@return integer|nil
+local function find_reference_index(reference, references)
+  for i, ref in ipairs(references) do
+    if ref.range.start.line == reference.range.start.line
+        and ref.range.start.character == reference.range.start.character then
+      return i
+    end
+  end
+  return nil
+end
+
 ---@param next_reference RefjumpReference
 ---@param forward boolean
 ---@param references RefjumpReference[]
@@ -74,6 +88,14 @@ local function jump_to_next_reference(next_reference, forward, references)
 
   if next_reference then
     jump_to(next_reference)
+
+    -- Display current index and total count
+    local current_index = find_reference_index(next_reference, references)
+    if current_index then
+      local total_count = #references
+      local bufnr = vim.api.nvim_get_current_buf()
+      require('refjump.counter').show(current_index, total_count, bufnr)
+    end
   else
     vim.notify('refjump.nvim: Could not find the next reference', vim.log.levels.WARN)
   end

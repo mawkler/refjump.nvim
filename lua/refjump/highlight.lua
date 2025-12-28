@@ -51,6 +51,7 @@ end
 function M.disable()
   if not highlight_references then
     vim.api.nvim_buf_clear_namespace(0, highlight_namespace, 0, -1)
+    require('refjump.counter').clear(0)
   else
     highlight_references = false
   end
@@ -60,6 +61,18 @@ function M.auto_clear_reference_highlights()
   vim.api.nvim_create_autocmd({ 'CursorMoved', 'ModeChanged', 'BufLeave' }, {
     callback = M.disable,
   })
+end
+
+function M.clear_on_escape()
+  local esc = vim.api.nvim_replace_termcodes('<Esc>', true, false, true)
+  local ctrl_c = vim.api.nvim_replace_termcodes('<C-c>', true, false, true)
+
+  vim.on_key(function(key)
+    -- Listen for escape or ctrl-c without blocking them
+    if key == esc or key == ctrl_c then
+      M.disable()
+    end
+  end, vim.api.nvim_create_namespace('refjump_escape_listener'))
 end
 
 return M
