@@ -42,6 +42,9 @@ opts = {
     enable = true, -- Highlight the LSP references on jump
     auto_clear = true, -- Automatically clear highlights when cursor moves
   },
+  counter = {
+    enable = true, -- Show [X/Y] virtual text counter at end of line
+  },
   integrations = {
     demicolon = {
       enable = true, -- Make `]r`/`[r` repeatable with `;`/`,` using demicolon.nvim
@@ -53,9 +56,35 @@ opts = {
 
 ### Highlights
 
-Refjump highlights the references by default. It uses the highlight group `RefjumpReference`. To change the highlight, see `:help nvim_set_hl()`.
+Refjump uses the following highlight groups:
+
+- `RefjumpReference` - for highlighting the references (links to `LspReferenceText` by default)
+- `RefjumpCounter` - for the virtual text counter (links to `WarningMsg` by default)
+
+To change the highlights, see `:help nvim_set_hl()`.
 
 ## Integrations
+
+### Statusline
+
+Refjump exposes `get_reference_info()` for statusline integration. This returns `{ index = number|nil, total = number }` with the current reference position.
+
+Example for [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim):
+
+```lua
+lualine_x = {
+  {
+    function()
+      local refjump = require("refjump")
+      local info = refjump.get_reference_info()
+      if info.index then
+        return string.format("[%d/%d]", info.index, info.total)
+      end
+      return ""
+    end,
+  },
+},
+```
 
 ### Demicolon
 

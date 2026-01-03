@@ -41,6 +41,12 @@ function M.enable(references, bufnr)
   highlight_references = true
 end
 
+---Check if reference highlights are currently active
+---@return boolean
+function M.is_active()
+  return highlight_references
+end
+
 ---@deprecated Use `disable()` instead
 function M.disable_reference_highlights()
   local message = 'refjump.nvim: `disable_reference_highlights()` has been renamed to `disable()`'
@@ -51,6 +57,8 @@ end
 function M.disable()
   if not highlight_references then
     vim.api.nvim_buf_clear_namespace(0, highlight_namespace, 0, -1)
+    require('refjump.counter').clear(0)
+    require('refjump.state').clear()
   else
     highlight_references = false
   end

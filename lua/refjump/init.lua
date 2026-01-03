@@ -9,12 +9,16 @@ local M = {}
 ---@field enable? boolean Highlight the LSP references on jump
 ---@field auto_clear boolean Automatically clear highlights when cursor moves
 
+---@class RefjumpCounterOptions
+---@field enable? boolean Show virtual text counter at end of line
+
 ---@class RefjumpIntegrationOptions
 ---@field demicolon? { enable?: boolean } Make `]r`/`[r` repeatable with `;`/`,` using demicolon.nvim
 
 ---@class RefjumpOptions
 ---@field keymaps? RefjumpKeymapOptions
 ---@field highlights? RefjumpHighlightOptions
+---@field counter? RefjumpCounterOptions
 ---@field integrations? RefjumpIntegrationOptions
 ---@field verbose? boolean Print message if no reference is found
 local options = {
@@ -26,6 +30,9 @@ local options = {
   highlights = {
     enable = true,
     auto_clear = true,
+  },
+  counter = {
+    enable = true,
   },
   integrations = {
     demicolon = {
@@ -55,8 +62,17 @@ function M.setup(opts)
       require('refjump.highlight').auto_clear_reference_highlights()
     end
   end
+
+  if options.counter.enable then
+    require('refjump.counter').create_hl_group()
+  end
 end
 
 M.reference_jump = require('refjump.jump').reference_jump
+
+---Get info about current reference position (for statusline use)
+---@param bufnr? integer Buffer number (defaults to current buffer)
+---@return { index: integer|nil, total: integer }
+M.get_reference_info = require('refjump.state').get_reference_info
 
 return M
